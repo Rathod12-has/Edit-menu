@@ -1,0 +1,21 @@
+{
+  "name": "Devi Sri Menu Editor",
+  "short_name": "Menu Editor",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "background_color": "#f4f6f8",
+  "theme_color": "#e65100",
+  "description": "Live update your app's menu for Devi Sri Delights.",
+  "icons": [
+    {
+      "src": "logo-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "logo-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
