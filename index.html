@@ -135,7 +135,6 @@
         };
         window.attemptLogout = () => signOut(auth);
 
-        // Load Menu from Firebase
         function loadMenuEditor() {
             onSnapshot(collection(db, "menu"), (snapshot) => {
                 const container = document.getElementById('menu-container');
@@ -160,9 +159,7 @@
                 liveCategories.forEach((cat, index) => {
                     let itemsHTML = '';
                     cat.items.forEach((item, itemIndex) => {
-                        // FIX: Checks if price is text (isNaN). If text, don't show ₹. If number, show ₹.
                         let priceDisplay = isNaN(item.price) ? item.price : `₹${item.price}`;
-                        
                         itemsHTML += `
                             <div class="menu-item">
                                 <span class="item-name">${item.name}</span>
@@ -192,27 +189,41 @@
             });
         }
 
-        // --- ORDER POSITIONING FUNCTIONS ---
+        // --- FIXED ORDER POSITIONING FUNCTIONS ---
         window.moveCategoryUp = async function(index) {
             if (index <= 0) return;
-            [liveCategories[index - 1], liveCategories[index]] = [liveCategories[index], liveCategories[index - 1]];
-            await saveAllCategoryOrders();
+            
+            // 1. Create a safe copy of the array so Firebase doesn't interrupt us
+            let safeArray = [...liveCategories];
+            
+            // 2. Swap positions locally
+            let temp = safeArray[index];
+            safeArray[index] = safeArray[index - 1];
+            safeArray[index - 1] = temp;
+
+            // 3. Fire all database updates at the EXACT same time
+            let promises = [];
+            safeArray.forEach((cat, newIndex) => {
+                promises.push(updateDoc(doc(db, "menu", cat.id), { order: newIndex }));
+            });
+            await Promise.all(promises);
         };
 
         window.moveCategoryDown = async function(index) {
             if (index >= liveCategories.length - 1) return;
-            [liveCategories[index + 1], liveCategories[index]] = [liveCategories[index], liveCategories[index + 1]];
-            await saveAllCategoryOrders();
-        };
+            
+            let safeArray = [...liveCategories];
+            
+            let temp = safeArray[index];
+            safeArray[index] = safeArray[index + 1];
+            safeArray[index + 1] = temp;
 
-        async function saveAllCategoryOrders() {
-            for (let i = 0; i < liveCategories.length; i++) {
-                if (liveCategories[i].order !== i) {
-                    liveCategories[i].order = i;
-                    await updateDoc(doc(db, "menu", liveCategories[i].id), { order: i });
-                }
-            }
-        }
+            let promises = [];
+            safeArray.forEach((cat, newIndex) => {
+                promises.push(updateDoc(doc(db, "menu", cat.id), { order: newIndex }));
+            });
+            await Promise.all(promises);
+        };
 
         // --- EDITOR FUNCTIONS ---
         window.addItem = async function(catId) {
@@ -315,5 +326,5 @@
         }
     </script>
 </body>
-    </html>
-    
+            </html>
+        
