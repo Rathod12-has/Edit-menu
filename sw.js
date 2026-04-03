@@ -1,4 +1,4 @@
-const CACHE_NAME = 'devi-sri-menu-v1';
+const CACHE_NAME = 'devi-sri-menu-v2';
 const urlsToCache = [
   './index.html',
   './manifest.json'
