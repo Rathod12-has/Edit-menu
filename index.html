@@ -171,11 +171,13 @@
                         `;
                     });
 
+                    // ADDED: The 🖼️ button inside .cat-actions
                     container.innerHTML += `
                         <div class="category-card">
                             <div class="category-header">
                                 <h3>${cat.name}</h3>
                                 <div class="cat-actions">
+                                    <button class="move-btn" onclick="editCategoryImage('${cat.id}', '${cat.image || ''}')" title="Edit Image">🖼️</button>
                                     <button class="move-btn" onclick="moveCategoryUp(${index})" ${index === 0 ? 'disabled' : ''}>⬆️</button>
                                     <button class="move-btn" onclick="moveCategoryDown(${index})" ${index === liveCategories.length - 1 ? 'disabled' : ''}>⬇️</button>
                                     <button class="del-btn" onclick="deleteCategory('${cat.id}')">Delete</button>
@@ -189,19 +191,25 @@
             });
         }
 
+        // --- NEW: EDIT IMAGE FUNCTION ---
+        window.editCategoryImage = async function(catId, currentImage) {
+            let newImage = prompt("Enter new Image URL for this category:", currentImage);
+            if (!newImage || newImage === currentImage) return; // Cancelled or unchanged
+            
+            // Update only the image field in Firebase
+            await updateDoc(doc(db, "menu", catId), { image: newImage });
+        };
+
         // --- FIXED ORDER POSITIONING FUNCTIONS ---
         window.moveCategoryUp = async function(index) {
             if (index <= 0) return;
             
-            // 1. Create a safe copy of the array so Firebase doesn't interrupt us
             let safeArray = [...liveCategories];
             
-            // 2. Swap positions locally
             let temp = safeArray[index];
             safeArray[index] = safeArray[index - 1];
             safeArray[index - 1] = temp;
 
-            // 3. Fire all database updates at the EXACT same time
             let promises = [];
             safeArray.forEach((cat, newIndex) => {
                 promises.push(updateDoc(doc(db, "menu", cat.id), { order: newIndex }));
@@ -326,5 +334,4 @@
         }
     </script>
 </body>
-            </html>
-        
+</html>
